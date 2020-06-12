@@ -3,3 +3,5 @@ model
 output
 cache
 __pycache__
+.vscode/
+upload.sh
