@@ -55,11 +55,14 @@ class Seq2seq(BaseModel):
 	def _preprocess_batch(self, data):
 		incoming = Storage()
 		incoming.data = data = Storage(data)
+		# print(data)
 		data.batch_size = data.post.shape[0]
 		data.post = cuda(torch.LongTensor(data.post.transpose(1, 0))) # length * batch_size
 		data.resp = cuda(torch.LongTensor(data.resp.transpose(1, 0))) # length * batch_size
-		data.post_bert = cuda(torch.LongTensor(data.post_bert.transpose(1, 0))) # length * batch_size
-		data.resp_bert = cuda(torch.LongTensor(data.resp_bert.transpose(1, 0))) # length * batch_size
+		# data.post_bert = cuda(torch.LongTensor(data.post_bert.transpose(1, 0))) # length * batch_size
+		# data.resp_bert = cuda(torch.LongTensor(data.resp_bert.transpose(1, 0))) # length * batch_size
+
+
 		return incoming
 
 	def get_next_batch(self, dm, key, restart=True):

@@ -48,7 +48,7 @@ class EmbeddingLayer(nn.Module):
 		self.param = param
 		volatile = param.volatile
 
-		self.embLayer = nn.Embedding(volatile.dm.vocab_size, args.embedding_size)
+		self.embLayer = nn.Embedding(volatile.dm.frequent_vocab_size, args.embedding_size)
 		self.embLayer.weight = nn.Parameter(torch.Tensor(volatile.wordvec))
 
 	def forward(self, incoming):
@@ -75,7 +75,8 @@ class BERTEncoder(nn.Module):
 	def forward(self, incoming):
 		incoming.hidden = hidden = Storage()
 		with torch.no_grad():
-			h, _ = self.bert_exclude(incoming.data.post_bert)
+			# h, _ = self.bert_exclude(incoming.data.post_bert)
+			h, _ = self.bert_exclude(incoming.data.post)
 		hidden.h = h # [length, batch, hidden]
 		hidden.h_n = self.drop(hidden.h[0])
 		hidden.h = self.drop(hidden.h)
@@ -98,9 +99,9 @@ class GenNetwork(nn.Module):
 		self.param = param
 
 		self.GRULayer = SingleAttnGRU(args.embedding_size, args.dh_size, args.eh_size * 2, initpara=False)
-		self.wLinearLayer = nn.Linear(args.dh_size + args.eh_size * 2, param.volatile.dm.vocab_size)
+		self.wLinearLayer = nn.Linear(args.dh_size + args.eh_size * 2, param.volatile.dm.frequent_vocab_size)
 		self.lossCE = nn.CrossEntropyLoss(ignore_index=param.volatile.dm.unk_id)
-		self.start_generate_id = param.volatile.dm.go_id
+		self.start_generate_id = param.volatile.dm.cls_id
 
 		self.drop = nn.Dropout(args.droprate)
 
@@ -179,7 +180,7 @@ class GenNetwork(nn.Module):
 				[" ".join(dm.convert_ids_to_tokens(incoming.data.resp[:, i].detach().cpu().numpy().tolist()))\
 				for i in range(batch_size)]
 		incoming.result.post_str = post_str = \
-				[" ".join(dm.convert_bert_ids_to_tokens(incoming.data.post_bert[:, i].detach().cpu().numpy().tolist()))\
+				[" ".join(dm.convert_ids_to_tokens(incoming.data.post[:, i].detach().cpu().numpy().tolist()))\
 				for i in range(batch_size)]
 		incoming.result.show_str = "\n".join(["post: " + a + "\n" + "resp: " + b + "\n" + \
 				"golden: " + c + "\n" \

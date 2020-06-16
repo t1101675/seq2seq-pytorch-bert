@@ -2,7 +2,8 @@
 import logging
 import json
 
-from cotk.dataloader import SingleTurnDialog, BERTLanguageProcessingBase
+from transformers import BertTokenizer
+from cotk.dataloader import SingleTurnDialog, PretrainedTokenizer
 from cotk.wordvector import WordVector, Glove
 
 from utils import debug, try_cache, cuda_init, Storage
@@ -25,17 +26,18 @@ def main(args, load_exclude_set, restoreCallback):
 	volatile.load_exclude_set = load_exclude_set
 	volatile.restoreCallback = restoreCallback
 
-	data_class = BERTLanguageProcessingBase.load_class('BERT' + args.dataset)
+	data_class = SingleTurnDialog.load_class(args.dataset)
 	data_arg = Storage()
-	data_arg.file_id = args.datapath
-	data_arg.bert_vocab_name = args.bert_vocab
+	data_arg.file_id = args.datapath + "#OpenSubtitles"
+	data_arg.tokenizer = PretrainedTokenizer(BertTokenizer.from_pretrained(args.bert_vocab))
+	data_arg.pretrained = "bert"
 	wordvec_class = WordVector.load_class(args.wvclass)
 	if wordvec_class is None:
 		wordvec_class = Glove
 	def load_dataset(data_arg, wvpath, embedding_size):
 		wv = wordvec_class(wvpath)
 		dm = data_class(**data_arg)
-		return dm, wv.load_matrix(embedding_size, dm.vocab_list) 
+		return dm, wv.load_matrix(embedding_size, dm.frequent_vocab_list)
 
 	if args.cache:
 		dm, volatile.wordvec = try_cache(load_dataset, (data_arg, args.wvpath, args.embedding_size),
