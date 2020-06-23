@@ -1,0 +1,1 @@
+rsync -avzP ./* newnlp3:~/seq2seq-pytorch-bert/

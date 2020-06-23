@@ -137,12 +137,12 @@ class DecoderRNN(nn.Module):
 
 		# output: w_o emb length
 
-		start_id = inp.dm.cls_id if no_unk else 0
+		start_id = inp.dm.get_special_tokens_id("cls") if no_unk else 0
 
 		batch_size = inp.batch_size
 		dm = inp.dm
 
-		first_emb = inp.embLayer(LongTensor([dm.cls_id])).repeat(batch_size, 1)
+		first_emb = inp.embLayer(LongTensor([dm.get_special_tokens_id("cls")])).repeat(batch_size, 1)
 
 		gen = Storage()
 		gen.w_pro = []
@@ -186,7 +186,7 @@ class DecoderRNN(nn.Module):
 			gen.emb.append(next_emb)
 
 			EOSmet.append(flag)
-			flag = flag | (w == dm.sep_id).byte()
+			flag = flag | (w == dm.get_special_tokens_id("sep")).byte()
 
 			if (i+1) % 10 == 0:
 				if torch.sum(flag).detach().cpu().numpy() == batch_size:
@@ -209,12 +209,12 @@ class DecoderRNN(nn.Module):
 
 		# output: w_o emb length
 
-		#start_id = inp.dm.cls_id if no_unk else 0
+		#start_id = inp.dm.get_special_tokens_id("cls") if no_unk else 0
 
 		batch_size = inp.batch_size
 		dm = inp.dm
 
-		first_emb = inp.embLayer(LongTensor([dm.cls_id])).repeat(batch_size, top_k, 1)
+		first_emb = inp.embLayer(LongTensor([dm.get_special_tokens_id("cls")])).repeat(batch_size, top_k, 1)
 
 		w_pro = []
 		w_o = []
@@ -274,7 +274,7 @@ class DecoderRNN(nn.Module):
 
 			EOSmet.append(flag)
 
-			flag = flag | (w == dm.sep_id).byte()
+			flag = flag | (w == dm.get_special_tokens_id("sep")).byte()
 			if torch.sum(flag).detach().cpu().numpy() == batch_size * top_k:
 				break
 
